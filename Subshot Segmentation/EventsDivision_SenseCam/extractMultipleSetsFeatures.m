@@ -23,6 +23,8 @@ for i_folder = 1:length(folders)
     format = formats{i_folder};
     camera = cameras{i_folder};
     
+    disp(['Extracting ' video_name]);
+    
     source_ = [source '/' camera '/imageSets/'];
     
     tic

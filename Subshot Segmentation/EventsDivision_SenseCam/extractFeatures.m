@@ -84,7 +84,7 @@ function [ features ] = extractFeatures( source, fileList, ini, fin, nBinsPerCol
         end
         
         %% Progress printing
-        if(mod(i,10)==0 && i ~= N)
+        if(mod(i,50)==0 && i ~= N)
             disp(['Features extraction progress: ' num2str(i) '/' num2str(N)]);
         end
         im1 = im2;
