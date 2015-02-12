@@ -14,17 +14,20 @@
 %% Parameters
 % source = 'D:\Documentos\Vicon Revue Data';
 % source = '/Volumes/SHARED HD/Documentos/Vicon Revue Data';
-source = '/Volumes/SHARED HD/Video Summarization Project Data Sets/Narrative';
+source = '/Volumes/SHARED HD/Video Summarization Project Data Sets/R-Clustering/SenseCam/imageSets';
 global video_name;
-% video_name  = '8B6E4826-77F5-66BF-FCBA-4054D0E84B0B';
-video_name = '10';
-format = '.jpg';
+% video_name  = '0BC25B01-7420-DD20-A1C8-3B2BD6C87CB0';
+video_name = 'Day1';
+
+extract_features = true;
+
+format = '.JPG';
 nBinsPerColor = 3; % max = 256
 lenHOG = [3 3 9]; % [rows cols nGradients]
 nBinsSIFTFlow = 8;
 nCellsBlurriness = [3 3]; % [rows cols]
 W = 11;
-min_imgs_event = 8;
+min_imgs_event = 0;
 
 global labelsSVM;
 global labels;
@@ -37,7 +40,7 @@ global p_value;
 global doEvaluation;
 
 doEvaluation = false;
-weight_GC = 8;
+weight_GC = 0.1;
 classifierUsed = 'KNN';
 k = 21;
 distanceMeasure = 'cosine'; % euclidean or cosine
@@ -66,16 +69,17 @@ fileList = dir([source '/' video_name '/*' format]);
 ini = 1;
 fin = length(fileList);
 
-% %% Features extraction
-% features = extractFeatures([source '/' video_name], fileList, ini, fin, nBinsPerColor, lenHOG, nBinsSIFTFlow, nCellsBlurriness);
-% 
-% featuresNoColour = features(:, (nBinsPerColor*3+lenHOG(1)*lenHOG(2)*lenHOG(3)+1):end);
-% 
-% %% Storing features
+%% Features extraction
 folder_name = ['Datasets/' video_name '_' num2str(ini) 'to' num2str(fin)];
-% mkdir(folder_name);
-% save([folder_name '/features.mat'], 'features');
-% save([folder_name '/featuresNoColour.mat'], 'featuresNoColour');
+if(extract_features)
+    features = extractFeatures([source '/' video_name], fileList, ini, fin, nBinsPerColor, lenHOG, nBinsSIFTFlow, nCellsBlurriness);
+    featuresNoColour = features(:, (nBinsPerColor*3+lenHOG(1)*lenHOG(2)*lenHOG(3)+1):end);
+
+    % Storing features
+    mkdir(folder_name);
+    save([folder_name '/features.mat'], 'features');
+    save([folder_name '/featuresNoColour.mat'], 'featuresNoColour');
+end
 
 toc
 
@@ -116,13 +120,21 @@ elseif(strcmp(classifierUsed, 'Combined'))
     labelsSVM = getClassFromLH(LH_SVM);
 end
 
+%% Get features for GraphCuts
+%%%% Color hists for each image.
+feat = load([folder_name '/features.mat']); % features
+[colourAndHOG, ~, ~] = normalize(feat.features(:,1:(9+81)));
+
+%% Get distances between samples
+dists = pdist(colourAndHOG);
+dists = squareform(dists);
 
 %% Build and calculate the MRF
 
 % %%%%%%%%%%% TESTS
-% maxTest = 25+1;
+% maxTest = 10+1;
 % offset = 1e-99;
-% increment = 0.15;
+% increment = 0.1;
 % vec_numC = zeros(1,maxTest);
 % vec_perC = zeros(1,maxTest);
 % for num_i = [1:maxTest]
@@ -131,8 +143,11 @@ end
     tic
     disp('Applying MRF smoothing...');
     % TESTS: num_i*increment+offset
-%     LH_MRF = buildMRF(folder_name, LH_SVM, W, (num_i-1)*increment+offset, '', 'GraphCuts', featureSelection); 
-    LH_MRF = buildMRF(folder_name, LH_SVM, W, weight_GC, '', 'GraphCuts', featureSelection); 
+% % % %     LH_MRF = buildMRF(folder_name, LH_SVM, W, (num_i-1)*increment+offset, '', 'GraphCuts', featureSelection); 
+%     LH_MRF = buildMRF(folder_name, LH_SVM, W, weight_GC, '', 'GraphCuts', featureSelection); 
+
+%     LH_MRF = buildGraphCuts(LH_SVM, colourAndHOG, W, (num_i-1)*increment+offset, dists);
+    LH_MRF = buildGraphCuts(LH_SVM, colourAndHOG, W, weight_GC, dists);
                                 % (the higher the less events)
     toc                                                             
 
