@@ -1,0 +1,66 @@
+source = '/Volumes/SHARED HD/Video Summarization Project Data Sets/R-Clustering/SenseCam/imageSets';
+global video_name;
+% video_name  = '0BC25B01-7420-DD20-A1C8-3B2BD6C87CB0';
+video_name = 'Day1';
+
+extract_features = true;
+
+format = '.JPG';
+nBinsPerColor = 3; % max = 256
+lenHOG = [3 3 9]; % [rows cols nGradients]
+nBinsSIFTFlow = 8;
+nCellsBlurriness = [3 3]; % [rows cols]
+W = 11;
+min_imgs_event = 0;
+
+global labelsSVM;
+global labels;
+global weight_GC;
+global classifierUsed;
+global weightsClassifiers;
+global distanceMeasure;
+global k;
+global p_value;
+global doEvaluation;
+
+doEvaluation = false;
+weight_GC = 0.1;
+classifierUsed = 'KNN';
+k = 21;
+distanceMeasure = 'cosine'; % euclidean or cosine
+
+%p_value = 0.001; % p-value used in the feature selection step befor training the classifier (just show purposes here)
+featureSelection = false;
+
+%% Parameters show path
+showResult = true;
+showResult2 = true;
+showResult3 = false;
+showResult4 = false;
+props = [100 133]; % proportions of the final summary image
+n_summaryImages = 10; % number of images per cluster shown as summary
+
+addpath('..');
+addpath('../..');
+
+%% Labels
+labels_text = ['T'; 'S'; 'M']; % In Transit, Static, Moving Camera
+
+tic
+%% Image retrieval
+fileList = dir([source '/' video_name '/*' format]);
+
+ini = 1;
+fin = length(fileList);
+
+%% Features extraction
+folder_name = ['Datasets/' video_name '_' num2str(ini) 'to' num2str(fin)];
+if(extract_features)
+    features = extractFeatures([source '/' video_name], fileList, ini, fin, nBinsPerColor, lenHOG, nBinsSIFTFlow, nCellsBlurriness);
+    featuresNoColour = features(:, (nBinsPerColor*3+lenHOG(1)*lenHOG(2)*lenHOG(3)+1):end);
+
+    % Storing features
+    mkdir(folder_name);
+    save([folder_name '/features.mat'], 'features');
+    save([folder_name '/featuresNoColour.mat'], 'featuresNoColour');
+end

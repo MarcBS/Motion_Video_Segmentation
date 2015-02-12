@@ -26,8 +26,8 @@ function [ features ] = extractFeatures( source, fileList, ini, fin, nBinsPerCol
 
     %% Video params
     CW = 5; % colour difference applyed over the previous CW images.
-%     resizeDiv = 5;
-    maxSize = 410; % maximum size of the larger side in pixels
+    resizeDiv = 5;
+    corr
     
     N = fin-ini+1;
     pos = ini:fin;
@@ -45,8 +45,7 @@ function [ features ] = extractFeatures( source, fileList, ini, fin, nBinsPerCol
     features = zeros(N-1, nBinsPerColor*3 + lenHOG(1)*lenHOG(2)*lenHOG(3) + nBinsSIFTFlow + nCellsBlurriness(1)*nCellsBlurriness(2) + nBinsPerColor*3);
     im1 = im2double(imread([source '/' fileList(pos(1)).name]));
     % Resize 
-%     props = size(im1) / resizeDiv;
-    props = size(im1) ./ (max(size(im1))/maxSize);
+    props = size(im1) / resizeDiv;
     im1 = imresize(im1, props(1:2));
     for i = 2:N
         im2 = im2double(imread([source '/' fileList(pos(i)).name]));
