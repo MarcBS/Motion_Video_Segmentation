@@ -46,8 +46,16 @@ toc
 
 % Load ground truth for testing
 if(doEvaluation)
-    load([folder_name '/labels_result']);
-    GT = [labels_result.label]';
+    if(strcmp(evaluation_type, 'acc_motion'))
+        load([folder_name '/labels_result']);
+        GT = [labels_result.label]';
+    elseif(strcmp(evaluation_type, 'fm_segments'))
+        GT_file = [source '/../GT/GT_' video_name '.xls'];
+        
+        [~,~,cl_limGT, ~]=analizarExcel_Narrative(GT_file, fileList);
+        GT=cl_limGT';
+        if GT(1) == 1, GT=GT(2:end); end
+    end
 end
 
 %% Applying SVM to the new samples
@@ -108,34 +116,18 @@ dists = squareform(dists);
 %     LH_MRF = buildMRF(folder_name, LH_SVM, W, weight_GC, '', 'GraphCuts', featureSelection); 
 
 %     LH_MRF = buildGraphCuts(LH_SVM, colourAndHOG, W, (num_i-1)*increment+offset, dists);
-    LH_MRF = buildGraphCuts(LH_SVM, colourAndHOG, W, weight_GC, dists);
+    LH_GC = buildGraphCuts(LH_SVM, colourAndHOG, W, weight_GC, dists);
                                 % (the higher the less events)
     toc                                                             
 
     % Save classification labels
-    labels = getClassFromLH(LH_MRF);
+    labels = getClassFromLH(LH_GC);
     save([folder_name '/labels.mat'], 'labels');
 
 
     %% Final separation in events
     nFrames = fin-ini;
-    event = zeros(1, nFrames); event(1) = 1;
-    prev = 1;
-    labels_event = [labels_text(labels(1))];
-    for i = 1:nFrames
-        if(labels(i) == 0)
-            event(i) = 0;
-        else
-            if(labels(i) == labels(prev))
-                event(i) = event(prev);
-            else
-                event(i) = event(prev)+1;
-                labels_event = [labels_event; labels_text(labels(i))];
-            end
-            prev = i;
-        end
-    end
-    num_clusters = max(event);
+    [ event, labels_event, num_clusters ] = getEventsFromLH(LH_GC);
 
 % %%%%%%%%%%% TESTS
 %     vec_numC(num_i) = num_clusters;
@@ -159,15 +151,20 @@ dists = squareform(dists);
 
 disp(' ');
 if(doEvaluation)
-    disp(['Accuracy after SVM: ' num2str(sum(GT==labelsSVM)/length(GT))]);
-    disp(['Accuracy after MRF: ' num2str(sum(GT==labels)/length(GT))]);
+    if(strcmp(evaluation_type, 'acc_motion'))
+        disp(['Accuracy after SVM: ' num2str(sum(GT==labelsSVM)/length(GT))]);
+        disp(['Accuracy after GC: ' num2str(sum(GT==labels)/length(GT))]);
+    elseif(strcmp(evaluation_type, 'fm_segments'))
+        [~, ~, ~, fMeasureGC]=Rec_Pre_Acc_Evaluation(GT,labels_event,length(fileList),tolerance);
+        disp(['F-Measure after GC: ' num2str(fMeasureGC)]);
+    end
 end
 disp(['Number of events: ' num2str(num_clusters)]);
 disp(['Mean frames per event: ' num2str(length(labels)/num_clusters)]);
 disp(' ');
 
 %% Show result measures
-if(doEvaluation)
+if(doEvaluation && strcmp(evaluation_type, 'acc_motion'))
     tmp_labels = {};
     for i = 1:nClasses
         tmp_labels{i} = labels(GT==i);

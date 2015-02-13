@@ -33,8 +33,9 @@ global p_value;
 global doEvaluation;
 
 %%% Evaluation Parameters
-doEvaluation = false;
+doEvaluation = true;
 evaluation_type = 'fm_segments'; % 'acc_motion' or 'fm_segments'
+tolerance = 5; % only used for fm_segments
 
 %%% GC Parameters
 W = 11;
@@ -60,7 +61,8 @@ n_summaryImages = 10; % number of images per cluster shown as summary
 
 addpath('..');
 addpath('../..');
-addpath('GraphCuts;SupervisedClassification;FeaturesExtraction;FeaturesPreprocessing');
+addpath('GraphCuts;SupervisedClassification;FeaturesExtraction');
+addpath('FeaturesPreprocessing;ResultsEvaluation;Data_Loading');
 
 %%% Labels
 labels_text = ['T'; 'S'; 'M']; % In Transit, Static, Moving Camera
