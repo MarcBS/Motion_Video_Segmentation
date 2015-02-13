@@ -1,9 +1,11 @@
 source = '/Volumes/SHARED HD/Video Summarization Project Data Sets/R-Clustering';
 
-cameras = {'Narrative', 'Narrative', 'Narrative', 'Narrative', 'Narrative', 'SenseCam', 'SenseCam', 'SenseCam', 'SenseCam', 'SenseCam'};
-folders={'Estefania1', 'Estefania2', 'Petia1', 'Petia2', 'Mariella', 'Day1','Day2','Day3','Day4','Day6'};
-% folders={'Petia2'};
-formats={'.jpg', '.jpg', '.jpg', '.jpg', '.jpg', '.JPG','.JPG','.JPG','.JPG','.JPG'};
+% cameras = {'Narrative', 'Narrative', 'Narrative', 'Narrative', 'Narrative', 'SenseCam', 'SenseCam', 'SenseCam', 'SenseCam', 'SenseCam'};
+cameras = {'Narrative', 'Narrative', 'Narrative', 'SenseCam', 'SenseCam', 'SenseCam', 'SenseCam', 'SenseCam'};
+% folders={'Estefania1', 'Estefania2', 'Petia1', 'Petia2', 'Mariella', 'Day1','Day2','Day3','Day4','Day6'};
+folders={'Estefania2', 'Petia1', 'Mariella', 'Day1','Day2','Day3','Day4','Day6'};
+% formats={'.jpg', '.jpg', '.jpg', '.jpg', '.jpg', '.JPG','.JPG','.JPG','.JPG','.JPG'};
+formats={'.jpg', '.jpg', '.jpg', '.JPG','.JPG','.JPG','.JPG','.JPG'};
 
 
 extract_features = true;
@@ -16,6 +18,7 @@ nCellsBlurriness = [3 3]; % [rows cols]
 
 addpath('..');
 addpath('../..');
+addpath('FeaturesExtraction');
 
 
 for i_folder = 1:length(folders)
@@ -29,8 +32,15 @@ for i_folder = 1:length(folders)
     
     tic
     %% Image retrieval
-    fileList = dir([source_ video_name '/*' format]);
-
+    fileList_aux = dir([source_ video_name '/*' format]);
+    count = 1;
+    for k = 1:length(fileList_aux)
+        if(fileList_aux(k).name(1) ~= '.')
+            fileList(count).name = fileList_aux(k).name;
+            count = count+1;
+        end
+    end
+    
     ini = 1;
     fin = length(fileList);
 
@@ -42,8 +52,7 @@ for i_folder = 1:length(folders)
 
         % Storing features
         mkdir(folder_name);
-        save([folder_name '/features.mat'], 'features');
-        save([folder_name '/featuresNoColour.mat'], 'featuresNoColour');
+        saveFeatures(folder_name, features, featuresNoColour);
     end
     toc
 end

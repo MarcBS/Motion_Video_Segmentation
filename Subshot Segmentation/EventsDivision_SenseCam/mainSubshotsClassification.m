@@ -11,60 +11,21 @@
 %       5) If showResult = true: a summary image with the final events is 
 %           created and stored.
 %%%%
-%% Parameters
-% source = 'D:\Documentos\Vicon Revue Data';
-% source = '/Volumes/SHARED HD/Documentos/Vicon Revue Data';
-source = '/Volumes/SHARED HD/Video Summarization Project Data Sets/R-Clustering/SenseCam/imageSets';
-global video_name;
-% video_name  = '0BC25B01-7420-DD20-A1C8-3B2BD6C87CB0';
-video_name = 'Day1';
 
-extract_features = true;
-
-format = '.JPG';
-nBinsPerColor = 3; % max = 256
-lenHOG = [3 3 9]; % [rows cols nGradients]
-nBinsSIFTFlow = 8;
-nCellsBlurriness = [3 3]; % [rows cols]
-W = 11;
-min_imgs_event = 0;
-
-global labelsSVM;
-global labels;
-global weight_GC;
-global classifierUsed;
-global weightsClassifiers;
-global distanceMeasure;
-global k;
-global p_value;
-global doEvaluation;
-
-doEvaluation = false;
-weight_GC = 0.1;
-classifierUsed = 'KNN';
-k = 21;
-distanceMeasure = 'cosine'; % euclidean or cosine
-
-%p_value = 0.001; % p-value used in the feature selection step befor training the classifier (just show purposes here)
-featureSelection = false;
-
-%% Parameters show path
-showResult = true;
-showResult2 = true;
-showResult3 = false;
-showResult4 = false;
-props = [100 133]; % proportions of the final summary image
-n_summaryImages = 10; % number of images per cluster shown as summary
-
-addpath('..');
-addpath('../..');
-
-%% Labels
-labels_text = ['T'; 'S'; 'M']; % In Transit, Static, Moving Camera
+%% Load parameters
+loadParameters;
 
 tic
 %% Image retrieval
-fileList = dir([source '/' video_name '/*' format]);
+fileList_aux = dir([source '/' video_name '/*' format]);
+count = 1;
+for k = 1:length(fileList_aux)
+    if(fileList_aux(k).name(1) ~= '.')
+        fileList(count).name = fileList_aux(k).name;
+        count = count+1;
+    end
+end
+
 
 ini = 1;
 fin = length(fileList);
