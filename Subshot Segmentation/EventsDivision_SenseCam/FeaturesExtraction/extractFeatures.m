@@ -49,6 +49,7 @@ function [ features ] = extractFeatures( source, fileList, ini, fin, nBinsPerCol
     props = size(im1) ./ (max(size(im1))/maxSize);
     im1 = imresize(im1, props(1:2));
     for i = 2:N
+%     for i = 600:N
         im2 = im2double(imread([source '/' fileList(pos(i)).name]));
         im2 = imresize(im2, props(1:2));
         

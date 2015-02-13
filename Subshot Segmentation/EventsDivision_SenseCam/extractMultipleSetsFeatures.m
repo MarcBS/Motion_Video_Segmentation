@@ -21,19 +21,20 @@ addpath('../..');
 addpath('FeaturesExtraction');
 
 
-for i_folder = 1:length(folders)
+parfor i_folder = 1:length(folders)
     video_name = folders{i_folder};
     format = formats{i_folder};
     camera = cameras{i_folder};
     
     disp(['Extracting ' video_name]);
     
-    source_ = [source '/' camera '/imageSets/'];
+    source_ = [source '/' camera '/imageSets'];
     
     tic
     %% Image retrieval
-    fileList_aux = dir([source_ video_name '/*' format]);
+    fileList_aux = dir([source_ '/' video_name '/*' format]);
     count = 1;
+    fileList = struct('name', []);
     for k = 1:length(fileList_aux)
         if(fileList_aux(k).name(1) ~= '.')
             fileList(count).name = fileList_aux(k).name;
