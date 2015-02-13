@@ -34,6 +34,7 @@ global doEvaluation;
 
 %%% Evaluation Parameters
 doEvaluation = true;
+doPlot = false;
 evaluation_type = 'fm_segments'; % 'acc_motion' or 'fm_segments'
 tolerance = 5; % only used for fm_segments
 
@@ -41,6 +42,8 @@ tolerance = 5; % only used for fm_segments
 W = 11;
 min_imgs_event = 0;
 weight_GC = 1;
+GC_test_type = 'iterative'; % 'single' or 'iterative'
+nTests = 10+1; % only for iterative
 
 %%% Supervisied classification parameters
 classifierUsed = 'KNN';
@@ -62,7 +65,7 @@ n_summaryImages = 10; % number of images per cluster shown as summary
 addpath('..');
 addpath('../..');
 addpath('GraphCuts;SupervisedClassification;FeaturesExtraction');
-addpath('FeaturesPreprocessing;ResultsEvaluation;Data_Loading');
+addpath('FeaturesPreprocessing;Evaluation;Data_Loading');
 
 %%% Labels
 labels_text = ['T'; 'S'; 'M']; % In Transit, Static, Moving Camera

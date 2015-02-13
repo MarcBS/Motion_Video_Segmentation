@@ -1,11 +1,11 @@
 source = '/Volumes/SHARED HD/Video Summarization Project Data Sets/R-Clustering';
 
 % cameras = {'Narrative', 'Narrative', 'Narrative', 'Narrative', 'Narrative', 'SenseCam', 'SenseCam', 'SenseCam', 'SenseCam', 'SenseCam'};
-cameras = {'Narrative', 'Narrative', 'Narrative', 'SenseCam', 'SenseCam', 'SenseCam', 'SenseCam', 'SenseCam'};
+cameras = {'Narrative', 'SenseCam', 'SenseCam', 'SenseCam', 'SenseCam', 'SenseCam'};
 % folders={'Estefania1', 'Estefania2', 'Petia1', 'Petia2', 'Mariella', 'Day1','Day2','Day3','Day4','Day6'};
-folders={'Estefania2', 'Petia1', 'Mariella', 'Day1','Day2','Day3','Day4','Day6'};
+folders={'Mariella', 'Day1','Day2','Day3','Day4','Day6'};
 % formats={'.jpg', '.jpg', '.jpg', '.jpg', '.jpg', '.JPG','.JPG','.JPG','.JPG','.JPG'};
-formats={'.jpg', '.jpg', '.jpg', '.JPG','.JPG','.JPG','.JPG','.JPG'};
+formats={'.jpg', '.JPG','.JPG','.JPG','.JPG','.JPG'};
 
 
 extract_features = true;

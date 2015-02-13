@@ -13,7 +13,7 @@
 %%%%
 
 %% Load parameters
-loadParameters;
+% loadParameters;
 
 tic
 %% Image retrieval
@@ -29,6 +29,7 @@ end
 
 ini = 1;
 fin = length(fileList);
+nFrames = fin-ini;
 
 %% Features extraction
 folder_name = ['Datasets/' video_name '_' num2str(ini) 'to' num2str(fin)];
@@ -98,56 +99,68 @@ feat = load([folder_name '/features.mat']); % features
 dists = pdist(colourAndHOG);
 dists = squareform(dists);
 
-%% Build and calculate the MRF
-
-% %%%%%%%%%%% TESTS
-% maxTest = 10+1;
-% offset = 1e-99;
-% increment = 0.1;
-% vec_numC = zeros(1,maxTest);
-% vec_perC = zeros(1,maxTest);
-% for num_i = [1:maxTest]
-% %%%%%%%%%%
-
-    tic
-    disp('Applying MRF smoothing...');
-    % TESTS: num_i*increment+offset
-% % % %     LH_MRF = buildMRF(folder_name, LH_SVM, W, (num_i-1)*increment+offset, '', 'GraphCuts', featureSelection); 
-%     LH_MRF = buildMRF(folder_name, LH_SVM, W, weight_GC, '', 'GraphCuts', featureSelection); 
-
-%     LH_MRF = buildGraphCuts(LH_SVM, colourAndHOG, W, (num_i-1)*increment+offset, dists);
+%% Build and calculate the GraphCut
+tic
+disp('Applying GC smoothing...');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%% SINGLE TEST
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if(strcmp(GC_test_type, 'single'))
     LH_GC = buildGraphCuts(LH_SVM, colourAndHOG, W, weight_GC, dists);
-                                % (the higher the less events)
-    toc                                                             
-
     % Save classification labels
     labels = getClassFromLH(LH_GC);
     save([folder_name '/labels.mat'], 'labels');
-
-
-    %% Final separation in events
-    nFrames = fin-ini;
+    % Final separation in events
     [ event, labels_event, num_clusters ] = getEventsFromLH(LH_GC);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%% ITERATIVE TEST
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+elseif(strcmp(GC_test_type, 'iterative'))
+    w_values = linspace(0, 1, nTests);
+    w_values(1) = 1e-99;
+    vec_numC = zeros(1,nTests);
+    vec_perC = zeros(1,nTests);
+    for num_i = [1:nTests]
+        LH_GC = buildGraphCuts(LH_SVM, colourAndHOG, W, w_values(num_i), dists);
+        % Final separation in events
+        [ event, labels_event, num_clusters ] = getEventsFromLH(LH_GC);
+        % Evaluation
+        vec_numC(num_i) = num_clusters;
+        if(strcmp(evaluation_type, 'acc_motion'))
+            vec_perC(num_i) = sum(GT==labels)/length(GT);
+        elseif(strcmp(evaluation_type, 'fm_segments'))
+            [~, ~, ~, fMeasureGC]=Rec_Pre_Acc_Evaluation(GT,labels_event,length(fileList),tolerance);
+            vec_perC(num_i) = fMeasureGC;
+        end
+    end
+    if(strcmp(evaluation_type, 'acc_motion'))
+        evalSupervised = sum(GT==labelsSVM)/length(GT);
+        measure = 'Accuracy';
+    elseif(strcmp(evaluation_type, 'fm_segments'))
+        [ ~, labels_event_SVM, ~ ] = getEventsFromLH(LH_SVM);
+        [~, ~, ~, evalSupervised]=Rec_Pre_Acc_Evaluation(GT,labels_event_SVM,length(fileList),tolerance);
+        measure = 'F-Measure';
+    end
+    
+    if(doPlot)
+        global fig;
+        fig = figure;
+        scatter(w_values,(vec_numC-min(vec_numC))./(max(vec_numC) - min(vec_numC)), 25, [0 0 0.8], 'filled'); % num events points
+        text(w_values, (vec_numC-min(vec_numC))./(max(vec_numC) - min(vec_numC))+0.03, cellstr(num2str(vec_numC'))); % num events labels
+        line(w_values, vec_perC, 'Color', 'g', 'LineWidth', 1.5) % GC accuracy
+        line(w_values, ones(1,nTests)*evalSupervised, 'Color', 'r', 'LineWidth', 2) % SVM accuracy
+    %     set(gca,'XTick', [1:nTests]-1 ); % x axis labels positions
+    %     xticklabel_rotate([1:nTests]-1,90,w_values, 'FontSize', 16,'interpreter','none');
+        % title(['Test data. FS p-value=' num2str(p_value) '.'], 'FontSize', 18);
+        title(['Test data comparison.'], 'FontSize', 18);
+        legend('Number Events', 'GC Accuracy', [classifierUsed ' ' measure], 1);
+        ylabel(measure, 'FontSize', 16);
+        xlabel('GC tuning value.', 'FontSize', 16);
+        set(gca,'FontSize',16);
+    end
+end
+toc
 
-% %%%%%%%%%%% TESTS
-%     vec_numC(num_i) = num_clusters;
-%     vec_perC(num_i) = sum(GT==labels)/length(GT);
-% end
-% global fig;
-% fig = figure;
-% scatter([1:maxTest]-1,(vec_numC-min(vec_numC))./(max(vec_numC) - min(vec_numC)), 25, [0 0 0.8], 'filled'); % num events points
-% text([1:maxTest]-1-0.05, (vec_numC-min(vec_numC))./(max(vec_numC) - min(vec_numC))+0.03, cellstr(num2str(vec_numC'))); % num events labels
-% line([1:maxTest]-1, vec_perC, 'Color', 'g', 'LineWidth', 1.5) % GC accuracy
-% line([1:maxTest]-1, ones(1,maxTest)*sum(GT==labelsSVM)/length(GT), 'Color', 'r', 'LineWidth', 2) % SVM accuracy
-% set(gca,'XTick', [1:maxTest]-1 ); % x axis labels positions
-% xticklabel_rotate([1:maxTest]-1,90,num2cell(([1:maxTest]-1).*increment+offset), 'FontSize', 16,'interpreter','none');
-% % title(['Test data. FS p-value=' num2str(p_value) '.'], 'FontSize', 18);
-% title(['Test data accuracy comparison.'], 'FontSize', 18);
-% legend('Number Events', 'GC Accuracy', [classifierUsed ' Accuracy'], 3);
-% ylabel('Accuracy', 'FontSize', 16);
-% xlabel('GC tuning value.', 'FontSize', 16);
-% set(gca,'FontSize',16);
-% %%%%%%%%%%%
 
 disp(' ');
 if(doEvaluation)
