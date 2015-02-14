@@ -2,7 +2,7 @@
 %%%%%%% For using this file, comment "loadParameters" line in mainSubshotsClassification.m
 
 %% Datasets parameters
-source = '/Volumes/SHARED HD/Video Summarization Project Data Sets/R-Clustering';
+source_ = '/Volumes/SHARED HD/Video Summarization Project Data Sets/R-Clustering';
 
 cameras = {'Narrative', 'Narrative', 'Narrative', 'Narrative', 'Narrative', 'SenseCam', 'SenseCam', 'SenseCam', 'SenseCam', 'SenseCam'};
 folders={'Estefania1', 'Estefania2', 'Petia1', 'Petia2', 'Mariella', 'Day1','Day2','Day3','Day4','Day6'};
@@ -21,6 +21,7 @@ for i_fold = 1:length(folders)
     video_name = folders{i_fold};
     camera = cameras{i_fold};
     format = formats{i_fold};
+    source = [source_ '/' camera '/imageSets'];
     
     % Execute main classification
     mainSubshotsClassification;

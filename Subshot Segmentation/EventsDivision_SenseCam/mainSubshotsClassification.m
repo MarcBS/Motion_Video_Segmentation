@@ -13,13 +13,13 @@
 %%%%
 
 %% Load parameters
-% loadParameters;
+loadParameters;
 
 tic
 %% Image retrieval
 fileList_aux = dir([source '/' video_name '/*' format]);
 count = 1;
-clear fileList;
+fileList = struct('name', []);
 for k = 1:length(fileList_aux)
     if(fileList_aux(k).name(1) ~= '.')
         fileList(count).name = fileList_aux(k).name;

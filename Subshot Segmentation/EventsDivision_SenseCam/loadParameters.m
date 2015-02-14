@@ -3,7 +3,7 @@
 %%% Dataset parameters
 % source = 'D:\Documentos\Vicon Revue Data';
 % source = '/Volumes/SHARED HD/Documentos/Vicon Revue Data';
-source = '/Volumes/SHARED HD/Video Summarization Project Data Sets/R-Clustering';
+source_ = '/Volumes/SHARED HD/Video Summarization Project Data Sets/R-Clustering';
 global video_name;
 % video_name  = '0BC25B01-7420-DD20-A1C8-3B2BD6C87CB0';
 video_name = 'Petia2';
@@ -11,7 +11,7 @@ camera = 'Narrative';
 format = '.jpg';
 
 
-source = [source '/' camera '/imageSets'];
+source = [source_ '/' camera '/imageSets'];
 
 %%% Feature extraction parameters
 extract_features = false;
